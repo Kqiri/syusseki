@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>出席ショートカット</title>
+<style>
+:root{--bg:#f2f4f8;--card:#fff;--tx:#18202b;--sub:#6a7482;--ac:#2f6bff;--ac2:#1f4fd1;--bd:#e3e7ee;--ok:#16a34a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1116;--card:#181c23;--tx:#eef1f6;--sub:#98a1af;--ac:#4f84ff;--ac2:#3566e0;--bd:#2a303a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1116;--card:#181c23;--tx:#eef1f6;--sub:#98a1af;--ac:#4f84ff;--ac2:#3566e0;--bd:#2a303a;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.5}
+main{max-width:560px;margin:0 auto;padding:14px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+header h1{font-size:18px;margin:0;flex:1}header select{width:auto;max-width:45%;font-weight:600}
+select,input,button{font:inherit;color:var(--tx)}
+select,input{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 10px;width:100%}
+button{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;cursor:pointer}
+button:active{transform:scale(.98)}
+.tabs{display:flex;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
+.tabs button{flex:1;border:0;background:none;padding:9px;font-weight:600;color:var(--sub)}
+.tabs button.on{background:var(--ac);color:#fff}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:14px}
+h2{font-size:13px;margin:0 0 10px;color:var(--sub);letter-spacing:.04em}
+.hero{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;border:0;border-radius:20px;padding:20px}
+.hero .lb{opacity:.85;font-size:13px}.hero .big{font-size:34px;font-weight:800;margin:2px 0}.hero .tm{opacity:.9;margin-bottom:14px}
+.hero .go{width:100%;background:#fff;color:var(--ac2);border:0;font-weight:800;font-size:18px;padding:15px;border-radius:14px}
+.hero .cps{display:flex;gap:8px;margin-top:10px}.hero .cps button{flex:1;background:rgba(255,255,255,.18);color:#fff;border:0}
+.row{display:flex;gap:8px;margin-top:8px}.row>*{flex:1}
+.item{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--bd)}.item:first-of-type{border-top:0}
+.item .p{width:42px;font-weight:800;color:var(--ac)}.item .t{flex:1}.item .t small{display:block;color:var(--sub)}
+.item.on{background:color-mix(in srgb,var(--ac) 10%,transparent);margin:0 -8px;padding:11px 8px;border-radius:10px}
+.item button{padding:7px 12px;font-weight:600}
+.sub{color:var(--sub);font-size:13px}.tt{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:430px}
+td,th{border:1px solid var(--bd);padding:4px;text-align:center;font-size:12px}td select{padding:5px 2px;font-size:13px;border-radius:6px}
+td.on{background:color-mix(in srgb,var(--ac) 14%,transparent)}.ps{width:58px!important;padding:2px!important;font-size:11px!important;text-align:center}
+label{display:block;font-size:12px;color:var(--sub);margin:10px 0 4px}
+.rm{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--bd)}.rm b{min-width:60px}.rm span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub);font-size:12px}
+.empty{text-align:center;color:var(--sub);padding:10px 0}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:20px;font-size:14px;z-index:9;display:none}
+a{color:var(--ac)}
+</style></head><body><main>
+<header><h1>📍 出席ショートカット</h1><select id="user"></select></header>
+<div class="tabs"><button data-t="today" class="on">今日</button><button data-t="tt">時間割</button><button data-t="set">設定</button></div>
+
+<section id="s-today" class="on">
+<div id="hero"></div>
+<div class="card"><h2>今日の授業</h2><div id="list"></div></div>
+<div class="card"><h2>コピー</h2><div class="row"><button id="qId">学番をコピー</button><button id="qPw">パスワードをコピー</button></div></div>
+</section>
+
+<section id="s-tt">
+<div class="card tt"><h2>時間割（<span id="ttname"></span>）</h2><button id="cpTT" style="margin-bottom:10px">他のユーザーの時間割をコピー</button><table id="tt"></table>
+<p class="sub">時限の時間は編集できます。授業開始の10分前から表示されます。</p></div>
+</section>
+
+<section id="s-set">
+<div class="card"><h2>ログイン情報</h2>
+<label>表示名</label><input id="name">
+<label>学番</label><input id="sid" autocomplete="off">
+<label>パスワード</label><input id="pw" type="password" autocomplete="off">
+<p class="sub">この端末のブラウザ内にだけ保存されます（暗号化なし）。共用PCでは入力しないでください。</p></div>
+
+<div class="card"><h2>教室リンク</h2><div id="rooms"></div>
+<label>教室名（例: 611）</label><input id="rn" placeholder="611">
+<label>リンク（URL、または末尾の番号だけでもOK）</label><input id="rl" placeholder="https://… または 611">
+<div class="row"><button id="addR" style="background:var(--ac);color:#fff;border:0;font-weight:700">教室を追加</button></div></div>
+
+<div class="card"><h2>ユーザー</h2>
+<div class="row"><button id="addU">＋ユーザー追加</button><button id="delU">このユーザーを削除</button></div></div>
+
+<div class="card"><h2>自動入力ブックマークレット（PC向け）</h2>
+<p class="sub">ブックマークバーにドラッグし、出席ページを開いてからクリックすると学番とパスワードが入ります。</p><a id="bm" href="#">🔑 自動入力</a></div>
+</section>
+</main><div id="toast"></div>
+<script>
+const BASE="https://attendance.is.chibatech.ac.jp/attendance/class_room/";
+const DEF={"614":BASE+"614","625":BASE+"625","646":BASE+"646","732":BASE+"7302","733":BASE+"7303"};
+const DAYS=["月","火","水","木","金"];
+let S={cur:0,periods:[["09:00","10:00"],["10:00","11:00"],["11:00","12:00"],["12:00","13:00"],["13:00","14:00"],["14:00","15:00"],["15:00","16:00"],["16:00","17:00"],["17:00","18:00"],["18:00","19:00"]],rooms:{...DEF},users:[{name:"海里",sid:"24G3124",pw:"",tt:{"0-0":"646","0-1":"646","0-2":"646","0-3":"646","1-1":"733","1-2":"733","1-4":"733","1-5":"733","1-6":"733","1-7":"733","2-1":"646","2-2":"646","2-4":"625","2-5":"625","2-6":"625","2-7":"625","3-0":"614","3-1":"614","3-2":"732","3-3":"732"}}]};
+try{const r=localStorage.getItem("att_v3")||localStorage.getItem("att_v2");if(r){const o=JSON.parse(r);S=Object.assign(S,o);if(!o.rooms)S.rooms={...DEF}}}catch(e){}
+const save=()=>{try{localStorage.setItem("att_v3",JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id),U=()=>S.users[S.cur];
+const mins=t=>{const[a,b]=t.split(":");return +a*60+ +b};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(t){const e=$("toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",1500)}
+async function cp(t){let ok=!!t;try{await navigator.clipboard.writeText(t||"")}catch(e){ok=false}toast(ok?"コピーしました ✓":"コピーできません（未入力か権限なし）")}
+function openRoom(r){const u=S.rooms[r];if(!u){toast("リンク未登録");return}cp(U().sid);window.open(u,"_blank","noopener")}
+function pick(){const d=new Date(),day=d.getDay()-1,m=d.getHours()*60+d.getMinutes();let cur=-1,next=-1;
+ if(day>=0&&day<5)S.periods.forEach((p,i)=>{if(!U().tt[day+"-"+i])return;if(cur<0&&m>=mins(p[0])-10&&m<mins(p[1]))cur=i;else if(next<0&&m<mins(p[0])-10)next=i});return{day,cur,next}}
+function renderToday(){const{day,cur,next}=pick(),tt=U().tt;let h="";
+ if(cur>=0){const r=tt[day+"-"+cur];h=`<div class="card hero"><div class="lb">いま出席する授業</div><div class="big">${cur+1}限　${esc(r)}</div><div class="tm">${S.periods[cur][0]} 〜 ${S.periods[cur][1]}</div><button class="go" data-open="${esc(r)}">出席ページを開く</button><div class="cps"><button data-cp="sid">学番コピー</button><button data-cp="pw">PWコピー</button></div></div>`}
+ else{h=`<div class="card"><div class="empty">${day<0||day>4?"今日は授業がありません":"いま出席する授業はありません"}`+(next>=0?`<br><b>次: ${next+1}限 ${esc(tt[day+"-"+next])}（${S.periods[next][0]}〜）</b>`:"")+`</div></div>`}
+ $("hero").innerHTML=h;
+ let l="";if(day>=0&&day<5)S.periods.forEach((p,i)=>{const r=tt[day+"-"+i];if(r)l+=`<div class="item ${i===cur?"on":""}"><div class="p">${i+1}限</div><div class="t"><b>${esc(r)}</b><small>${p[0]}〜${p[1]}</small></div><button data-open="${esc(r)}">開く</button></div>`});
+ $("list").innerHTML=l||'<div class="empty">授業なし</div>'}
+function renderUsers(){$("user").innerHTML=S.users.map((u,i)=>`<option value="${i}" ${i==S.cur?"selected":""}>${esc(u.name||"名前なし")}</option>`).join("");
+ $("name").value=U().name;$("sid").value=U().sid;$("pw").value=U().pw;$("ttname").textContent=U().name;bm()}
+function bm(){const sid=JSON.stringify(U().sid),pw=JSON.stringify(U().pw);
+ const js=`(function(){var i=[].slice.call(document.querySelectorAll('input')).filter(function(x){return x.offsetParent&&x.type!='hidden'});var p=i.filter(function(x){return x.type=='password'})[0];var t=i.filter(function(x){return x!==p&&['submit','checkbox','button'].indexOf(x.type)<0})[0];function s(e,v){if(!e)return;Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,v);e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}s(t,${sid});s(p,${pw});})();`;
+ $("bm").href="javascript:"+encodeURIComponent(js)}
+function renderTT(){const{day,cur}=pick();let h="<tr><th></th>"+DAYS.map(d=>`<th>${d}</th>`).join("")+"</tr>";
+ S.periods.forEach((p,i)=>{h+=`<tr><th>${i+1}限<br><input class="ps" data-i="${i}" data-k="0" value="${p[0]}"><br><input class="ps" data-i="${i}" data-k="1" value="${p[1]}"></th>`;
+  DAYS.forEach((_,d)=>{const v=U().tt[d+"-"+i]||"";const ks=Object.keys(S.rooms);if(v&&ks.indexOf(v)<0)ks.push(v);
+   h+=`<td class="${d===day&&i===cur?"on":""}"><select data-c="${d}-${i}"><option value="">-</option>${ks.map(r=>`<option ${v===r?"selected":""}>${esc(r)}</option>`).join("")}</select></td>`});h+="</tr>"});
+ $("tt").innerHTML=h;
+ document.querySelectorAll("select[data-c]").forEach(s=>s.onchange=()=>{const k=s.dataset.c;if(s.value)U().tt[k]=s.value;else delete U().tt[k];save();renderToday()});
+ document.querySelectorAll(".ps").forEach(s=>s.onchange=()=>{S.periods[s.dataset.i][s.dataset.k]=s.value;save();renderToday()})}
+function renderRooms(){$("rooms").innerHTML=Object.keys(S.rooms).map(r=>`<div class="rm"><b>${esc(r)}</b><span>${esc(S.rooms[r])}</span><button data-del="${esc(r)}">削除</button></div>`).join("")||'<div class="empty">教室がありません</div>'}
+function all(){renderUsers();renderRooms();renderTT();renderToday()}
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.open)openRoom(b.dataset.open);
+ if(b.dataset.cp)cp(U()[b.dataset.cp]);
+ if(b.dataset.del&&confirm(b.dataset.del+" を削除しますか？（時間割からも消えます）")){delete S.rooms[b.dataset.del];S.users.forEach(u=>{for(const k in u.tt)if(u.tt[k]===b.dataset.del)delete u.tt[k]});save();all()}
+ if(b.dataset.t){document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==="s-"+b.dataset.t))}});
+$("user").onchange=e=>{S.cur=+e.target.value;save();all()};
+$("qId").onclick=()=>cp(U().sid);$("qPw").onclick=()=>cp(U().pw);
+$("name").oninput=e=>{U().name=e.target.value;save();$("user").options[S.cur].text=U().name||"名前なし";$("ttname").textContent=U().name};
+$("sid").oninput=e=>{U().sid=e.target.value;save();bm()};
+$("pw").oninput=e=>{U().pw=e.target.value;save();bm()};
+$("addR").onclick=()=>{const n=$("rn").value.trim();let l=$("rl").value.trim();if(!n||!l){toast("教室名とリンクを入力");return}
+ if(/^\w+$/.test(l))l=BASE+l;if(!/^https?:\/\//.test(l)){toast("リンクの形式が正しくありません");return}
+ S.rooms[n]=l;$("rn").value=$("rl").value="";save();all();toast("追加しました ✓")};
+$("addU").onclick=()=>{const n=prompt("名前");if(!n)return;const c=confirm("今のユーザー（"+U().name+"）の時間割をコピーしますか？\nOK=コピー／キャンセル=空で作る");S.users.push({name:n,sid:"",pw:"",tt:c?{...U().tt}:{}});S.cur=S.users.length-1;save();all()};
+$("delU").onclick=()=>{if(S.users.length<2||!confirm(U().name+" を削除しますか？"))return;S.users.splice(S.cur,1);S.cur=0;save();all()};
+$("cpTT").onclick=()=>{const o=S.users.map((u,i)=>i).filter(i=>i!==S.cur);if(!o.length)return;const n=prompt("コピー元の番号を入力\n"+o.map(i=>(i+1)+": "+S.users[i].name).join("\n"));const i=parseInt(n)-1;if(S.users[i]&&i!==S.cur){U().tt={...S.users[i].tt};save();all()}};
+all();setInterval(renderToday,30000);
+</script></body></html>
